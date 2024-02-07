@@ -1,5 +1,9 @@
 const issues = require("../sampleData/sampleData");
 
+const dateScalar = require("../scalars/date");
+
+const Issue = require("../models/Issue");
+
 const {
     GraphQLObjectType,
     GraphQLID,
@@ -16,6 +20,8 @@ const IssueType = new GraphQLObjectType({
         status: { type: GraphQLString },
         owner: { type: GraphQLString },
         effort: { type: GraphQLInt },
+        created: { type: dateScalar },
+        due: { type: dateScalar },
         title: { type: GraphQLString },
     }),
 });
