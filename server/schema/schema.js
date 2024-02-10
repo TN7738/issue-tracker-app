@@ -11,6 +11,7 @@ const {
     GraphQLInt,
     GraphQLSchema,
     GraphQLList,
+    GraphQLNonNull,
 } = require("graphql");
 
 const IssueType = new GraphQLObjectType({
@@ -33,13 +34,84 @@ const RootQuery = new GraphQLObjectType({
             type: IssueType,
             args: { id: { type: GraphQLID } },
             resolve: (parent, args) => {
-                return issues.find((issue) => issue.id === args.id);
+                return Issue.findById(args.id);
             },
         },
         issues: {
             type: new GraphQLList(IssueType),
             resolve: (parent, args) => {
-                return issues;
+                return Issue.find();
+            },
+        },
+    },
+});
+
+// Mutations
+const mutations = new GraphQLObjectType({
+    name: "Mutation",
+    fields: {
+        // add a new issue to DB
+        addIssue: {
+            type: IssueType,
+            args: {
+                status: { type: GraphQLNonNull(GraphQLString) },
+                owner: { type: GraphQLNonNull(GraphQLString) },
+                effort: { type: GraphQLNonNull(GraphQLInt) },
+                created: { type: GraphQLNonNull(dateScalar) },
+                due: { type: dateScalar },
+                title: { type: GraphQLNonNull(GraphQLString) },
+            },
+            resolve: (parent, args) => {
+                const issue = new Issue({
+                    status: args.status,
+                    owner: args.owner,
+                    effort: args.effort,
+                    created: args.created,
+                    due: args.due,
+                    title: args.title,
+                });
+                return issue.save();
+            },
+        },
+
+        // delete an issue in DB
+        deleteIssue: {
+            type: IssueType,
+            args: {
+                id: { type: GraphQLNonNull(GraphQLID) },
+            },
+            resolve: (parent, args) => {
+                return Issue.findByIdAndDelete(args.id);
+            },
+        },
+
+        // update an issue in DB
+        updateIssue: {
+            type: IssueType,
+            args: {
+                id: { type: GraphQLNonNull(GraphQLID) },
+                status: { type: GraphQLString },
+                owner: { type: GraphQLString },
+                effort: { type: GraphQLInt },
+                created: { type: dateScalar },
+                due: { type: dateScalar },
+                title: { type: GraphQLString },
+            },
+            resolve: (parent, args) => {
+                return Issue.findByIdAndUpdate(
+                    args.id,
+                    {
+                        $set: {
+                            status: args.status,
+                            owner: args.owner,
+                            effort: args.effort,
+                            created: args.created,
+                            due: args.due,
+                            title: args.title,
+                        },
+                    },
+                    { new: true }
+                );
             },
         },
     },
@@ -47,4 +119,5 @@ const RootQuery = new GraphQLObjectType({
 
 module.exports = new GraphQLSchema({
     query: RootQuery,
+    mutation: mutations,
 });
