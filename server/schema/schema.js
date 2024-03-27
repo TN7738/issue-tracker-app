@@ -114,6 +114,30 @@ const mutations = new GraphQLObjectType({
                 );
             },
         },
+
+        // filter issues based on status and/or owwner
+        filterIssues: {
+            type: new GraphQLList(IssueType),
+            args: {
+                status: { type: GraphQLString },
+                owner: { type: GraphQLString },
+            },
+            resolve: (parent, args) => {
+                console.log(args);
+                if (args.status !== "" && args.owner === "") {
+                    return Issue.find({ status: args.status });
+                } else if (args.status === "" && args.owner !== "") {
+                    return Issue.find({ owner: args.owner });
+                } else if (args.status !== "" && args.owner !== "") {
+                    return Issue.find({
+                        owner: args.owner,
+                        status: args.status,
+                    });
+                } else {
+                    return Issue.find();
+                }
+            },
+        },
     },
 });
 
